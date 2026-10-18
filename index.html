@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dead-State Pruner | DFA Optimization & State Pruning Engine</title>
+  <meta name="description" content="College TAE Project: Automated graph-theoretic DFA optimization tool that detects unreachable and dead/trap states and eliminates them while preserving language acceptance.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="manifest" href="/static/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/static/icon.svg">
+  <meta name="theme-color" content="#111827">
+  <!-- Offline Cytoscape fallback and online CDN -->
+  <script src="/static/vendor/cytoscape.min.js"></script>
+</head>
+<body class="dark-theme">
+
+  <!-- Top Navigation Bar -->
+  <header class="navbar" id="top-nav">
+    <div class="nav-container">
+      <div class="nav-brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="6" cy="12" r="3" />
+            <circle cx="18" cy="6" r="3" />
+            <circle cx="18" cy="18" r="3" />
+            <path d="M9 11l6-4M9 13l6 4" />
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">Dead-State Pruner</span>
+          <span class="brand-tag">TAE Project</span>
+        </div>
+      </div>
+
+      <nav class="nav-links">
+        <a href="#dashboard" class="nav-link active">Dashboard</a>
+        <a href="#builder-section" class="nav-link">DFA Builder</a>
+        <a href="#analysis-section" class="nav-link">Graph & Analyzer</a>
+        <a href="#comparison-section" class="nav-link">Optimizer & Compare</a>
+        <a href="#verification-section" class="nav-link">Language Verification</a>
+        <a href="#theory-section" class="nav-link">Theory & Algorithm</a>
+        <a href="#about-section" class="nav-link">About</a>
+      </nav>
+
+      <div class="nav-actions">
+        <button id="quick-demo-btn" class="btn btn-sm btn-accent" title="Instantly load college viva showcase DFA">
+          <span class="btn-icon">⚡</span> Quick Viva Demo
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+
+    <!-- 1. Hero / Dashboard Section -->
+    <section class="section hero-section" id="dashboard">
+      <div class="hero-container">
+        <div class="badge-pill">
+          <span class="pulse-dot"></span>
+          Theory of Automata &amp; Formal Languages &bull; College TAE Project
+        </div>
+
+        <h1 class="hero-title">
+          Dead-State <span class="gradient-text">Pruner</span>
+        </h1>
+        <p class="hero-subtitle">
+          DFA Optimization &amp; Graph-Theoretic State Pruning Tool
+        </p>
+        <p class="hero-desc">
+          Automatically detect unreachable and dead/trap states in a Deterministic Finite Automaton using dual-direction graph traversal and simplify the DFA without altering language acceptance: \(L(M) = L(M')\).
+        </p>
+
+        <div class="hero-actions">
+          <a href="#builder-section" class="btn btn-primary btn-lg" id="start-analysis-btn">
+            <span>Start DFA Analysis</span>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </a>
+          <button class="btn btn-outline btn-lg" id="load-spec-example-btn">
+            Load Specification Example
+          </button>
+        </div>
+
+        <!-- Dashboard 3 Feature Cards -->
+        <div class="feature-cards-grid">
+          <div class="feature-card" data-step="1">
+            <div class="card-icon blue">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <path d="M9 3v18M3 9h18"/>
+              </svg>
+            </div>
+            <h3>DFA Builder</h3>
+            <p>Define states, alphabet, initial state, accepting states, and full transition functions with real-time determinism validation.</p>
+            <span class="card-link-hint">Step 1: Input &amp; Parse &rarr;</span>
+          </div>
+
+          <div class="feature-card" data-step="2">
+            <div class="card-icon amber">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="9"/>
+                <path d="M12 7v5l3 3"/>
+              </svg>
+            </div>
+            <h3>State Analyzer</h3>
+            <p>Perform forward BFS for reachability and backward BFS from accepting states to detect isolated and dead/trap states.</p>
+            <span class="card-link-hint">Step 2: Traversal &rarr;</span>
+          </div>
+
+          <div class="feature-card" data-step="3">
+            <div class="card-icon emerald">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                <path d="M14 2v6h6M9 15l2 2 4-4"/>
+              </svg>
+            </div>
+            <h3>DFA Optimizer</h3>
+            <p>Eliminate unproductive states, generate the reduced automaton, inspect side-by-side graphs, and empirically verify language equivalence.</p>
+            <span class="card-link-hint">Step 3: Optimize &rarr;</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Preset Selection Bar -->
+    <section class="preset-bar-section">
+      <div class="preset-bar-container">
+        <span class="preset-label"><strong>Quick Presets:</strong></span>
+        <div class="preset-buttons">
+          <button class="btn btn-chip active" data-preset="viva_demo" id="preset-viva">
+            ⭐ Viva Showcase (Unreachable + Trap State)
+          </button>
+          <button class="btn btn-chip" data-preset="spec_example" id="preset-spec">
+            📄 Prompt Spec (q0-q4, q4 Unreachable)
+          </button>
+          <button class="btn btn-chip" data-preset="multiple_traps" id="preset-traps">
+            🔄 Multiple Trap States &amp; Cycle
+          </button>
+          <button class="btn btn-chip" data-preset="self_loop_safe" id="preset-safe">
+            🛡️ Mathematical Safety (Productive Loops)
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. DFA Builder Section -->
+    <section class="section" id="builder-section">
+      <div class="section-header">
+        <span class="section-tag">CONFIGURATION</span>
+        <h2 class="section-title">Deterministic Finite Automaton Builder</h2>
+        <p class="section-subtitle">Define the 5-tuple \(M = (Q, \Sigma, \delta, q_0, F)\) and configure transitions with deterministic validation.</p>
+      </div>
+
+      <div class="builder-container">
+        <!-- Configuration Controls Card -->
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <h3>Automaton Parameters</h3>
+            <span class="status-indicator ready" id="validation-status-pill">Ready to Configure</span>
+          </div>
+
+          <div class="builder-form-grid">
+            <!-- States Input -->
+            <div class="form-group">
+              <label for="states-input">
+                <strong>States (\(Q\))</strong>
+                <span class="help-text">Comma-separated state identifiers</span>
+              </label>
+              <input type="text" id="states-input" class="form-input" placeholder="e.g. q0, q1, q2, q3, q4, q5" value="q0, q1, q2, q3, q4, q5">
+              <div class="tag-chips-container" id="states-chips-preview"></div>
+            </div>
+
+            <!-- Alphabet Input -->
+            <div class="form-group">
+              <label for="alphabet-input">
+                <strong>Alphabet (\(\Sigma\))</strong>
+                <span class="help-text">Comma-separated input symbols</span>
+              </label>
+              <input type="text" id="alphabet-input" class="form-input" placeholder="e.g. 0, 1" value="0, 1">
+              <div class="tag-chips-container" id="alphabet-chips-preview"></div>
+            </div>
+
+            <!-- Initial State Select -->
+            <div class="form-group">
+              <label for="initial-state-select">
+                <strong>Initial State (\(q_0\))</strong>
+                <span class="help-text">The designated start state (\(q_0 \in Q\))</span>
+              </label>
+              <select id="initial-state-select" class="form-select"></select>
+            </div>
+
+            <!-- Final States Checkboxes / Pills -->
+            <div class="form-group">
+              <label>
+                <strong>Final / Accepting States (\(F \subseteq Q\))</strong>
+                <span class="help-text">Select one or more accepting states</span>
+              </label>
+              <div class="checkbox-pills-container" id="final-states-container"></div>
+            </div>
+          </div>
+
+          <!-- Dynamic Transition Table -->
+          <div class="transitions-builder-header">
+            <div>
+              <h4>Transition Function \(\delta(q, a) \to q'\)</h4>
+              <p class="help-text">Configure deterministic state transitions for all state-symbol pairs.</p>
+            </div>
+            <div class="transitions-actions">
+              <button type="button" class="btn btn-sm btn-outline" id="auto-fill-matrix-btn" title="Generate blank rows for all state-symbol pairs">
+                ⚡ Auto-Fill Matrix
+              </button>
+              <button type="button" class="btn btn-sm btn-outline" id="add-transition-row-btn">
+                + Add Transition
+              </button>
+              <button type="button" class="btn btn-sm btn-ghost text-danger" id="clear-transitions-btn">
+                Clear All
+              </button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="transition-edit-table" id="transitions-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Current State (\(q\))</th>
+                  <th>Input Symbol (\(a\))</th>
+                  <th>Next State (\(\delta(q, a)\))</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="transitions-tbody">
+                <!-- Dynamically populated rows -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Live Validation Alerts Box -->
+          <div class="validation-box hidden" id="validation-alert-box">
+            <div class="alert-header">
+              <span class="alert-icon" id="validation-alert-icon">⚠️</span>
+              <strong id="validation-alert-title">Validation Notice</strong>
+            </div>
+            <ul id="validation-alert-list" class="alert-list"></ul>
+          </div>
+
+          <!-- Form Action Buttons -->
+          <div class="builder-footer-actions">
+            <button type="button" class="btn btn-lg btn-primary" id="analyze-dfa-btn">
+              <span class="btn-icon">🔍</span>
+              <strong>Analyze DFA</strong>
+            </button>
+            <button type="button" class="btn btn-lg btn-outline" id="load-example-btn">
+              Reset to Example DFA
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. DFA Graph Visualization & Analyzer Section -->
+    <section class="section" id="analysis-section">
+      <div class="section-header">
+        <span class="section-tag">GRAPH TRAVERSAL</span>
+        <h2 class="section-title">Interactive DFA Graph &amp; State Classification</h2>
+        <p class="section-subtitle">Visual directed graph representation with dynamic highlighting of reachable, unreachable, and dead/trap states.</p>
+      </div>
+
+      <div class="graph-dashboard-grid">
+        <!-- Main Cytoscape Graph Canvas Card -->
+        <div class="panel-card graph-panel">
+          <div class="graph-toolbar">
+            <div class="graph-title-block">
+              <h3>Original DFA Graph View</h3>
+              <span class="graph-info-badge" id="graph-state-counter">6 States &bull; 12 Transitions</span>
+            </div>
+            <div class="graph-controls">
+              <button class="btn btn-icon-sm" id="graph-zoom-in" title="Zoom In">+</button>
+              <button class="btn btn-icon-sm" id="graph-zoom-out" title="Zoom Out">&minus;</button>
+              <button class="btn btn-icon-sm" id="graph-fit" title="Fit to Viewport">Fit</button>
+              <button class="btn btn-icon-sm" id="graph-relayout" title="Relayout Graph">Layout</button>
+              <button class="btn btn-sm btn-outline" id="export-png-btn" title="Export graph as PNG image">
+                📷 Export PNG
+              </button>
+            </div>
+          </div>
+
+          <!-- Cytoscape Container -->
+          <div id="cy-original" class="cytoscape-container"></div>
+
+          <!-- Graph Legend -->
+          <div class="graph-legend">
+            <div class="legend-item"><span class="legend-swatch normal"></span> Normal State</div>
+            <div class="legend-item"><span class="legend-swatch initial"></span> &rarr; Initial State</div>
+            <div class="legend-item"><span class="legend-swatch final"></span> &#9678; Final / Accepting State</div>
+            <div class="legend-item"><span class="legend-swatch unreachable"></span> ⚠ Unreachable (Prune)</div>
+            <div class="legend-item"><span class="legend-swatch dead"></span> ⚠ Dead / Trap (Prune)</div>
+          </div>
+        </div>
+
+        <!-- Analysis Results Summary Panel -->
+        <div class="panel-card results-panel">
+          <div class="panel-card-header">
+            <h3>Analysis Results</h3>
+            <span class="badge-status complete">Analysis Complete</span>
+          </div>
+
+          <!-- Stat KPI Counters -->
+          <div class="stats-kpi-grid">
+            <div class="kpi-card">
+              <span class="kpi-label">Total States</span>
+              <span class="kpi-value" id="kpi-total-states">6</span>
+            </div>
+            <div class="kpi-card kpi-reach">
+              <span class="kpi-label">Reachable</span>
+              <span class="kpi-value" id="kpi-reachable-states">5</span>
+            </div>
+            <div class="kpi-card kpi-unreach">
+              <span class="kpi-label">Unreachable</span>
+              <span class="kpi-value text-danger" id="kpi-unreachable-states">1</span>
+            </div>
+            <div class="kpi-card kpi-dead">
+              <span class="kpi-label">Dead / Trap</span>
+              <span class="kpi-value text-warning" id="kpi-dead-states">1</span>
+            </div>
+            <div class="kpi-card kpi-final">
+              <span class="kpi-label">Final States</span>
+              <span class="kpi-value text-success" id="kpi-final-states">1</span>
+            </div>
+            <div class="kpi-card kpi-prune">
+              <span class="kpi-label">States to Prune</span>
+              <span class="kpi-value text-purple" id="kpi-prune-states">2</span>
+            </div>
+          </div>
+
+          <!-- Categorized State Breakdown -->
+          <div class="state-breakdown-list">
+            <!-- Reachable States Card -->
+            <div class="breakdown-card border-reach">
+              <div class="breakdown-header">
+                <strong>Reachable States:</strong>
+                <span class="badge badge-sm" id="badge-reachable-count">5</span>
+              </div>
+              <div class="state-pills-list" id="pills-reachable-states"></div>
+              <p class="breakdown-desc">States reachable via forward path starting from initial state \(q_0\).</p>
+            </div>
+
+            <!-- Unreachable States Card -->
+            <div class="breakdown-card border-unreach">
+              <div class="breakdown-header">
+                <strong class="text-danger">Unreachable States:</strong>
+                <span class="badge badge-sm badge-danger" id="badge-unreachable-count">1</span>
+              </div>
+              <div class="state-pills-list" id="pills-unreachable-states"></div>
+              <p class="breakdown-desc">No directed path exists from initial state \(q_0\). Can be safely pruned without affecting computation.</p>
+            </div>
+
+            <!-- Dead / Trap States Card -->
+            <div class="breakdown-card border-dead">
+              <div class="breakdown-header">
+                <strong class="text-warning">Dead / Trap States:</strong>
+                <span class="badge badge-sm badge-warning" id="badge-dead-count">1</span>
+              </div>
+              <div class="state-pills-list" id="pills-dead-states"></div>
+              <p class="breakdown-desc">Reachable from \(q_0\), but no directed path exists to ANY accepting state \(f \in F\). Computation entering here can never accept.</p>
+            </div>
+
+            <!-- States to Prune Card -->
+            <div class="breakdown-card border-prune">
+              <div class="breakdown-header">
+                <strong class="text-purple">Total States to Prune:</strong>
+                <span class="badge badge-sm badge-purple" id="badge-prune-count">2</span>
+              </div>
+              <div class="state-pills-list" id="pills-prune-states"></div>
+              <p class="breakdown-desc">\(Q_{prune} = Q_{unreachable} \cup Q_{dead}\). Eliminating these preserves \(L(M)\) exactly.</p>
+            </div>
+          </div>
+
+          <!-- Traversal Trace Inspection Accordion -->
+          <details class="trace-accordion">
+            <summary class="trace-summary">
+              <span>View Graph Traversal Trace Logs</span>
+              <span class="accordion-arrow">&darr;</span>
+            </summary>
+            <div class="trace-content">
+              <h5>1. Forward BFS Trace (from Initial State \(q_0\)):</h5>
+              <div class="log-stream" id="forward-trace-stream"></div>
+
+              <h5 class="mt-3">2. Backward Reverse-BFS Trace (from Final States \(F\)):</h5>
+              <div class="log-stream" id="reverse-trace-stream"></div>
+            </div>
+          </details>
+
+          <!-- Prune Action Call-to-Action -->
+          <div class="prune-cta-box">
+            <button class="btn btn-lg btn-success w-100" id="prune-dfa-action-btn">
+              <span class="btn-icon">✂</span>
+              <strong>Prune Dead &amp; Unreachable States</strong>
+            </button>
+            <p class="prune-note">Calculates the minimal reachable &amp; productive sub-automaton.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Before vs After Comparison & Optimization Section -->
+    <section class="section" id="comparison-section">
+      <div class="section-header">
+        <span class="section-tag">OPTIMIZATION PIPELINE</span>
+        <h2 class="section-title">Before vs After Comparison</h2>
+        <p class="section-subtitle">Visual and mathematical comparison of original automaton vs the pruned, optimized DFA.</p>
+      </div>
+
+      <!-- Confirmation Banner -->
+      <div class="success-banner" id="prune-success-banner">
+        <div class="success-banner-icon">&#10003;</div>
+        <div>
+          <h4>DFA Successfully Optimized!</h4>
+          <p>All dead and unreachable states have been pruned without altering language acceptance: \(L(M_{orig}) = L(M_{opt})\).</p>
+        </div>
+      </div>
+
+      <!-- Workflow Arrow Visual -->
+      <div class="workflow-stepper">
+        <div class="step-node active">
+          <span class="step-num">1</span>
+          <span class="step-label">Original DFA (\(M\))</span>
+        </div>
+        <div class="step-line active"></div>
+        <div class="step-node active">
+          <span class="step-num">2</span>
+          <span class="step-label">Dual Traversal Analysis</span>
+        </div>
+        <div class="step-line active"></div>
+        <div class="step-node active">
+          <span class="step-num">3</span>
+          <span class="step-label">Optimized DFA (\(M'\))</span>
+        </div>
+      </div>
+
+      <!-- Comparison Metrics Header -->
+      <div class="comparison-kpi-banner">
+        <div class="comparison-kpi-col">
+          <span class="compare-title">Original DFA</span>
+          <div class="compare-stats">
+            <div><strong id="orig-states-stat">6</strong> States</div>
+            <div>&bull;</div>
+            <div><strong id="orig-trans-stat">12</strong> Transitions</div>
+          </div>
+        </div>
+
+        <div class="comparison-reduction-badge">
+          <span class="reduction-label">State Reduction</span>
+          <span class="reduction-percent" id="reduction-percent-tag">-33.3%</span>
+        </div>
+
+        <div class="comparison-kpi-col">
+          <span class="compare-title">Optimized DFA</span>
+          <div class="compare-stats">
+            <div><strong id="opt-states-stat" class="text-success">4</strong> Useful States</div>
+            <div>&bull;</div>
+            <div><strong id="opt-trans-stat" class="text-success">8</strong> Transitions</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dual Side-by-Side Graph Comparison -->
+      <div class="dual-graph-comparison-grid">
+        <!-- Original Graph with Highlights -->
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <h4>Original Automaton \(M\)</h4>
+            <span class="badge badge-sm badge-warning">Unpruned</span>
+          </div>
+          <div id="cy-compare-orig" class="cytoscape-container mini-cy"></div>
+          <p class="graph-caption">Dashed red/orange borders denote states flagged for elimination.</p>
+        </div>
+
+        <!-- Optimized Graph Clean -->
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <h4>Optimized Automaton \(M'\)</h4>
+            <span class="badge badge-sm badge-success">Optimized</span>
+          </div>
+          <div id="cy-optimized" class="cytoscape-container mini-cy"></div>
+          <p class="graph-caption">Every remaining state is reachable from start and can reach a final state.</p>
+        </div>
+      </div>
+
+      <!-- Side-by-Side Transition Tables -->
+      <div class="dual-tables-grid">
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <h4>Original Transition Table</h4>
+            <span class="table-legend-hint">&rarr; Start, * Final</span>
+          </div>
+          <div class="table-responsive">
+            <table class="matrix-table" id="matrix-table-original">
+              <!-- Populated by JS -->
+            </table>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <h4>Optimized Transition Table</h4>
+            <span class="badge badge-sm badge-success">Pruned &bull; Language Preserved</span>
+          </div>
+          <div class="table-responsive">
+            <table class="matrix-table" id="matrix-table-optimized">
+              <!-- Populated by JS -->
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Language Acceptance Verification Section -->
+    <section class="section" id="verification-section">
+      <div class="section-header">
+        <span class="section-tag">VERIFICATION &amp; TESTING</span>
+        <h2 class="section-title">Language Acceptance Verification</h2>
+        <p class="section-subtitle">Empirically and mathematically verify that \(L(M_{orig}) = L(M_{opt})\) for arbitrary input words.</p>
+      </div>
+
+      <!-- Interactive Single String Simulator -->
+      <div class="panel-card mb-4">
+        <div class="panel-card-header">
+          <h3>Single String Interactive Traversal Tester</h3>
+          <span class="badge-status live">Simulation Engine</span>
+        </div>
+
+        <div class="simulator-input-bar">
+          <div class="input-with-label">
+            <label for="test-string-input"><strong>Input String (\(w \in \Sigma^*\)):</strong></label>
+            <input type="text" id="test-string-input" class="form-input form-input-lg" placeholder="e.g. 0101, 00, 110, or ε" value="00">
+          </div>
+          <button class="btn btn-primary btn-lg" id="run-single-test-btn">
+            <span>Test String</span>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Quick Sample String Pills -->
+        <div class="sample-strings-chips">
+          <span class="sample-label">Quick Test Words:</span>
+          <button class="btn-sample" data-word="ε">&epsilon; (Empty String)</button>
+          <button class="btn-sample" data-word="0">0</button>
+          <button class="btn-sample" data-word="1">1</button>
+          <button class="btn-sample" data-word="00">00</button>
+          <button class="btn-sample" data-word="01">01</button>
+          <button class="btn-sample" data-word="0101">0101</button>
+          <button class="btn-sample" data-word="101">101</button>
+          <button class="btn-sample" data-word="111">111</button>
+        </div>
+
+        <!-- Real-Time Traversal Output -->
+        <div class="traversal-comparison-box mt-3" id="traversal-result-box">
+          <div class="verdict-banner-row">
+            <div class="verdict-badge match" id="verdict-match-badge">
+              <span class="verdict-icon">&#10003;</span>
+              <span id="verdict-match-text">Result: Language acceptance preserved &check;</span>
+            </div>
+            <div class="verdict-tested-string">
+              Tested String: <code id="verdict-tested-string-val">&quot;00&quot;</code>
+            </div>
+          </div>
+
+          <div class="traversal-paths-grid">
+            <!-- Original DFA Path -->
+            <div class="path-card">
+              <div class="path-card-header">
+                <strong>Original DFA Path</strong>
+                <span class="status-pill accepted" id="orig-verdict-pill">Accepted</span>
+              </div>
+              <div class="path-trace-display" id="orig-path-trace">
+                <!-- Trajectory steps -->
+              </div>
+              <div class="path-footer">
+                Final State: <code id="orig-final-state-code">q2</code> &bull; <span id="orig-is-accepting-text">Accepting state</span>
+              </div>
+            </div>
+
+            <!-- Optimized DFA Path -->
+            <div class="path-card">
+              <div class="path-card-header">
+                <strong>Optimized DFA Path</strong>
+                <span class="status-pill accepted" id="opt-verdict-pill">Accepted</span>
+              </div>
+              <div class="path-trace-display" id="opt-path-trace">
+                <!-- Trajectory steps -->
+              </div>
+              <div class="path-footer">
+                Final State: <code id="opt-final-state-code">q2</code> &bull; <span id="opt-is-accepting-text">Accepting state</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Batch Language Preservation Test Suite -->
+      <div class="panel-card">
+        <div class="panel-card-header">
+          <div>
+            <h3>Empirical Language Preservation Test Suite</h3>
+            <p class="help-text">Runs standard systematic strings through both automata to verify identical accept/reject verdicts.</p>
+          </div>
+          <button class="btn btn-sm btn-outline" id="rerun-batch-btn">
+            &#x21bb; Rerun Batch Suite
+          </button>
+        </div>
+
+        <div class="batch-results-summary-bar">
+          <div class="batch-stat">
+            Tested Vectors: <strong id="batch-count-val">15</strong>
+          </div>
+          <div class="batch-stat">
+            Verdict Match Rate: <strong class="text-success" id="batch-match-val">100%</strong>
+          </div>
+          <div class="batch-status-badge success" id="batch-status-pill">
+            &check; All tested strings produced identical results
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="batch-test-table" id="batch-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>String (\(w\))</th>
+                <th>Length</th>
+                <th>Original DFA Result</th>
+                <th>Optimized DFA Result</th>
+                <th>Match</th>
+                <th>State Traversal Path</th>
+              </tr>
+            </thead>
+            <tbody id="batch-tbody">
+              <!-- Dynamically rendered -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Academic Disclaimer Callout -->
+        <div class="academic-note-callout mt-3">
+          <span class="note-icon">&#9432;</span>
+          <p>
+            <strong>Academic Note:</strong> The empirical test suite validates equality over sample vectors up to length \(k=3\). Formal mathematical equivalence \(L(M) = L(M')\) is rigorously proven by Theorem: Any string reaching an unreachable state is impossible by definition; and any string entering a dead state can never reach \(F\), thus yielding rejection in both machines.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Theory, Algorithm & Complexity Section -->
+    <section class="section" id="theory-section">
+      <div class="section-header">
+        <span class="section-tag">THEORETICAL FOUNDATION</span>
+        <h2 class="section-title">Step-by-Step Algorithm &amp; Complexity</h2>
+        <p class="section-subtitle">Mathematical formulation, graph traversal mechanics, safety rules, and algorithmic complexity.</p>
+      </div>
+
+      <!-- Algorithm Visual Pipeline / Flowchart -->
+      <div class="flowchart-container">
+        <h4 class="flowchart-title">Dead-State Pruning Workflow Pipeline</h4>
+        <div class="pipeline-flow">
+          <div class="pipeline-step">
+            <span class="step-badge">1</span>
+            <strong>Parse DFA</strong>
+            <span>\(M = (Q, \Sigma, \delta, q_0, F)\)</span>
+          </div>
+          <div class="pipeline-arrow">&rarr;</div>
+
+          <div class="pipeline-step">
+            <span class="step-badge">2</span>
+            <strong>Forward BFS</strong>
+            <span>Traverse from \(q_0\)</span>
+          </div>
+          <div class="pipeline-arrow">&rarr;</div>
+
+          <div class="pipeline-step alert-step">
+            <span class="step-badge">3</span>
+            <strong>Identify Unreachable</strong>
+            <span>\(Q_{unreach} = Q \setminus Q_{reach}\)</span>
+          </div>
+          <div class="pipeline-arrow">&rarr;</div>
+
+          <div class="pipeline-step">
+            <span class="step-badge">4</span>
+            <strong>Construct \(G^R\)</strong>
+            <span>Reverse all edge directions</span>
+          </div>
+          <div class="pipeline-arrow">&rarr;</div>
+
+          <div class="pipeline-step">
+            <span class="step-badge">5</span>
+            <strong>Reverse BFS</strong>
+            <span>Multi-source from \(F\)</span>
+          </div>
+          <div class="pipeline-arrow">&rarr;</div>
+
+          <div class="pipeline-step alert-step">
+            <span class="step-badge">6</span>
+            <strong>Identify Dead/Trap</strong>
+            <span>\(Q_{dead} = Q_{reach} \setminus Q_{canReachFinal}\)</span>
+          </div>
+          <div class="pipeline-arrow">&rarr;</div>
+
+          <div class="pipeline-step success-step">
+            <span class="step-badge">7</span>
+            <strong>Prune &amp; Rebuild</strong>
+            <span>Eliminate dead states &amp; edges</span>
+          </div>
+          <div class="pipeline-arrow">&rarr;</div>
+
+          <div class="pipeline-step">
+            <span class="step-badge">8</span>
+            <strong>Verify \(L(M)\)</strong>
+            <span>Simulate &amp; compare</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pseudocode and Mathematical Safety Rule Grid -->
+      <div class="theory-grid mt-4">
+        <!-- Pseudocode Panel -->
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <h4>Algorithm Pseudocode</h4>
+            <button class="btn btn-xs btn-outline" id="copy-pseudocode-btn">Copy Code</button>
+          </div>
+          <pre class="code-block"><code id="pseudocode-text">FUNCTION pruneDFA(DFA):
+    // Step 1: Forward Reachability Analysis
+    reachable = BFS(DFA.initialState, DFA.transitions)
+    unreachable = DFA.states - reachable
+
+    // Step 2: Backward Productive Analysis
+    reverseGraph = invertEdges(DFA.transitions)
+    reverseReachable = multiSourceBFS(DFA.finalStates, reverseGraph)
+
+    // Step 3: Classify Dead/Trap States
+    // Reachable states with NO directed path to ANY accepting state
+    dead = reachable - reverseReachable
+
+    // Step 4: Determine Pruning Set
+    removable = unreachable UNION dead
+
+    // Step 5: Construct Optimized DFA
+    optimizedStates = DFA.states - removable
+    optimizedFinal = DFA.finalStates INTERSECT optimizedStates
+    optimizedTransitions = filterTransitions(DFA.transitions, optimizedStates)
+
+    optimizedDFA = new DFA(
+        states: optimizedStates,
+        alphabet: DFA.alphabet,
+        initialState: DFA.initialState,
+        finalStates: optimizedFinal,
+        transitions: optimizedTransitions
+    )
+
+    RETURN optimizedDFA
+END FUNCTION</code></pre>
+        </div>
+
+        <!-- Mathematical Safety Rule Card -->
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <h4>Mathematical Safety Rules</h4>
+            <span class="badge badge-sm badge-success">Correctness Invariant</span>
+          </div>
+          <div class="safety-rules-content">
+            <div class="safety-rule-item">
+              <span class="rule-icon">&#128737;</span>
+              <div>
+                <strong>Self-Loops are Never Pruned Blindly:</strong>
+                <p>A state with a self-loop (\(q \xrightarrow{a} q\)) is vital for regular languages like \((0|1)^*\). The algorithm only classifies a state as dead if it has <em>no directed path whatsoever</em> to any state in \(F\).</p>
+              </div>
+            </div>
+
+            <div class="safety-rule-item">
+              <span class="rule-icon">&#128737;</span>
+              <div>
+                <strong>Unreachable Final States:</strong>
+                <p>If an accepting state \(f \in F\) is disconnected from \(q_0\), it can never be reached during any string processing. Removing it strictly preserves \(L(M)\) because no word could ever terminate in it.</p>
+              </div>
+            </div>
+
+            <div class="safety-rule-item">
+              <span class="rule-icon">&#128737;</span>
+              <div>
+                <strong>Transition Safety &amp; Language Invariant:</strong>
+                <p>For any word \(w \in \Sigma^*\): if \(w\) attempts to transition into a dead state, it could never reach \(F\) in \(M\); therefore, halting or rejecting in \(M'\) yields the exact same rejection result.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Complexity Analysis Cards -->
+      <div class="complexity-cards-grid mt-4">
+        <div class="panel-card">
+          <h4>Time Complexity</h4>
+          <div class="complexity-value">\(O(V + E)\)</div>
+          <p class="complexity-desc">Linear with respect to graph size.</p>
+          <ul class="complexity-breakdown">
+            <li>Forward Reachability BFS: \(\mathcal{O}(V + E)\)</li>
+            <li>Graph Inversion \(G^R\): \(\mathcal{O}(E)\)</li>
+            <li>Reverse Final-Reachability BFS: \(\mathcal{O}(V + E)\)</li>
+            <li>State &amp; Edge Filtering: \(\mathcal{O}(V + E)\)</li>
+            <li><strong>Overall Time:</strong> \(\mathcal{O}(V + E)\)</li>
+          </ul>
+        </div>
+
+        <div class="panel-card">
+          <h4>Space Complexity</h4>
+          <div class="complexity-value">\(O(V + E)\)</div>
+          <p class="complexity-desc">Memory footprint for graph representations.</p>
+          <ul class="complexity-breakdown">
+            <li>Forward Adjacency Map: \(\mathcal{O}(V + E)\)</li>
+            <li>Reverse Adjacency Map \(G^R\): \(\mathcal{O}(V + E)\)</li>
+            <li>BFS Queues &amp; Visited Sets: \(\mathcal{O}(V)\)</li>
+            <li>Optimized Machine Struct: \(\mathcal{O}(V' + E') \le \mathcal{O}(V + E)\)</li>
+            <li><strong>Overall Space:</strong> \(\mathcal{O}(V + E)\)</li>
+          </ul>
+        </div>
+
+        <div class="panel-card">
+          <h4>Theoretical Distinction</h4>
+          <div class="complexity-value">Pre-Minimization</div>
+          <p class="complexity-desc">Comparison with Hopcroft's Algorithm.</p>
+          <ul class="complexity-breakdown">
+            <li>Dead-State Pruner eliminates useless vertices in \(\mathcal{O}(V + E)\).</li>
+            <li>Hopcroft's equivalence minimization runs in \(\mathcal{O}(|\Sigma| V \log V)\) on reachable states.</li>
+            <li>State pruning is the essential preparatory step before quotient partition minimization!</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. Export & Reporting Section -->
+    <section class="section" id="export-section">
+      <div class="section-header">
+        <span class="section-tag">EXPORT &amp; REPORTING</span>
+        <h2 class="section-title">College TAE Lab Report &amp; Data Export</h2>
+        <p class="section-subtitle">Generate presentation-ready reports, export transition tables, and download high-resolution diagrams.</p>
+      </div>
+
+      <div class="export-actions-grid">
+        <div class="export-card">
+          <div class="export-icon blue">&#128196;</div>
+          <h4>Download Comprehensive TAE Report</h4>
+          <p>Generates a formal, printable academic report with complete problem definition, DFA specifications, before/after metrics, transition tables, and verification results.</p>
+          <button class="btn btn-primary" id="download-report-btn">
+            Download Lab Report (Print / PDF)
+          </button>
+        </div>
+
+        <div class="export-card">
+          <div class="export-icon emerald">&#128202;</div>
+          <h4>Export Transition Tables</h4>
+          <p>Export the original and optimized transition matrices as clean CSV or JSON format for documentation and code analysis.</p>
+          <div class="export-btn-group">
+            <button class="btn btn-outline" id="export-csv-btn">Export CSV</button>
+            <button class="btn btn-outline" id="export-json-btn">Export JSON</button>
+          </div>
+        </div>
+
+        <div class="export-card">
+          <div class="export-icon purple">&#128247;</div>
+          <h4>Export Visual DFA Graphs</h4>
+          <p>Export high-resolution PNG snapshots of the original and optimized automaton graphs for slides and project documentation.</p>
+          <button class="btn btn-outline" id="export-graphs-png-btn">
+            Export Graphs as PNG
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. About Section -->
+    <section class="section" id="about-section">
+      <div class="section-header">
+        <span class="section-tag">ABOUT PROJECT</span>
+        <h2 class="section-title">About Dead-State Pruner</h2>
+        <p class="section-subtitle">College TAE (Theory of Automata &amp; Formal Languages) Evaluation Project.</p>
+      </div>
+
+      <div class="about-grid">
+        <div class="panel-card">
+          <h4>Project Topic &amp; Objective</h4>
+          <p>
+            <strong>Dead-State Pruner</strong> is a specialized DFA optimization tool designed to identify unreachable and dead/trap states using graph traversal techniques. The system simplifies deterministic finite automata while preserving their language acceptance behavior.
+          </p>
+          <div class="academic-tag-list mt-3">
+            <span class="tag-badge">Deterministic Finite Automata</span>
+            <span class="tag-badge">Graph Traversal</span>
+            <span class="tag-badge">DFS / BFS</span>
+            <span class="tag-badge">Reachability</span>
+            <span class="tag-badge">Dead States</span>
+            <span class="tag-badge">Trap States</span>
+            <span class="tag-badge">DFA Optimization</span>
+            <span class="tag-badge">Automata Theory</span>
+            <span class="tag-badge">Algorithm Complexity</span>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <h4>Technologies Used</h4>
+          <ul class="tech-stack-list">
+            <li><strong>Frontend:</strong> HTML5, CSS3 (Modern Dark Theme, Glassmorphism, CSS Grid), Vanilla JavaScript (ES6+)</li>
+            <li><strong>Backend:</strong> Python 3 Flask RESTful API</li>
+            <li><strong>Graph Visualization:</strong> Cytoscape.js with Directed Bezier Edges, Concentric Final State Borders, and Custom Layout</li>
+            <li><strong>Local &amp; Zero-Cost:</strong> 100% Offline Capable, No Paid APIs, No Authentication Required</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Printable Academic Lab Report Container (Hidden on Screen, Shown in Print / PDF Mode) -->
+  <div id="printable-report" class="printable-report-container">
+    <div class="report-header">
+      <div class="report-header-top">
+        <h2>COLLEGE OF ENGINEERING &amp; TECHNOLOGY</h2>
+        <h3>Department of Computer Science and Engineering</h3>
+        <h4>Theory of Automata &amp; Formal Languages (TAE) &bull; Project Evaluation Report</h4>
+      </div>
+      <div class="report-title-box">
+        <h1>PROJECT: DEAD-STATE PRUNER</h1>
+        <p>Automated DFA Graph Traversal, State Elimination, and Language Equivalence Verification</p>
+      </div>
+      <div class="report-meta-grid">
+        <div><strong>Student / Team:</strong> CSE Automata Lab</div>
+        <div><strong>Date:</strong> <span id="report-date-val"></span></div>
+        <div><strong>Complexity:</strong> Time: \(\mathcal{O}(V + E)\), Space: \(\mathcal{O}(V + E)\)</div>
+        <div><strong>Equivalence Verdict:</strong> \(L(M) = L(M')\) [Preserved &check;]</div>
+      </div>
+    </div>
+
+    <div class="report-section">
+      <h3>1. Original Automaton Specification (\(M\))</h3>
+      <div id="report-orig-spec"></div>
+    </div>
+
+    <div class="report-section">
+      <h3>2. Graph Traversal Analysis &amp; State Classification</h3>
+      <table class="report-table" id="report-classification-table">
+        <thead>
+          <tr>
+            <th>State</th>
+            <th>Initial</th>
+            <th>Accepting</th>
+            <th>Reachable from \(q_0\)</th>
+            <th>Can Reach \(F\)</th>
+            <th>Classification</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="report-classification-tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="report-section">
+      <h3>3. Optimization Metrics</h3>
+      <div class="report-metrics-box" id="report-metrics-box"></div>
+    </div>
+
+    <div class="report-section">
+      <h3>4. Transition Tables Comparison</h3>
+      <div class="report-tables-split">
+        <div>
+          <h4>Original DFA Transition Table</h4>
+          <div id="report-orig-table-container"></div>
+        </div>
+        <div>
+          <h4>Optimized DFA Transition Table</h4>
+          <div id="report-opt-table-container"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="report-section">
+      <h3>5. Empirical Language Preservation Testing</h3>
+      <div id="report-batch-results-container"></div>
+    </div>
+
+    <div class="report-footer">
+      <p>Report automatically generated by <strong>Dead-State Pruner</strong>. Certified for Academic Lab Submission &amp; Viva Demonstration.</p>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <div>
+        <strong>Dead-State Pruner</strong> &bull; DFA Optimization &amp; State Pruning Engine
+      </div>
+      <div class="footer-links">
+        <a href="#dashboard">Back to Top &uarr;</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>
