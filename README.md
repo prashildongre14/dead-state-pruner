@@ -98,44 +98,38 @@ dead-state-pruner/
 
 ---
 
-## 5. How to Run Locally
+## 5. How to Run
 
-### Prerequisites
-- Python 3.9+ installed.
+### Method 1: Instant 1-Click Launch (Recommended)
+Simply double-click **`START_HERE.bat`** in this folder! It gives you options:
+- **[1] Web Application** (opens in your default browser at `http://127.0.0.1:5000`)
+- **[2] Native Desktop Window** (standalone Chromium WebView2)
+- **[3] Offline Standalone Web Page** (no Python required)
 
-### Step 1: Navigate to the Project Directory
-```powershell
-cd C:\Users\Samyak\.gemini\antigravity-ide\scratch\dead-state-pruner
-```
+### Method 2: Direct Web App Launch
+Double-click **`run_web.bat`**. It automatically starts the Flask server and opens the web application in your browser.
 
-### Step 2: Install Dependencies
+### Method 3: Direct Browser Launch (No Python Needed)
+Double-click **`index.html`** in this folder. The entire DFA optimization engine, presets, Cytoscape graph renderer, and simulation suite run 100% client-side in Google Chrome, Edge, Safari, or Firefox!
+
+### Method 4: Command Line
 ```powershell
 pip install -r requirements.txt
-```
-
-### Step 3: Run as a Web Application
-```powershell
 python app.py
 ```
-Open your browser and navigate to:
+Then navigate to:
 ```
 http://127.0.0.1:5000
 ```
 
-### Step 4: Run as a Native Desktop Application
-Double-click `run_desktop.bat` or run:
+### Method 5: Native Desktop Application
+Double-click **`run_desktop.bat`** or run:
 ```powershell
 python desktop.py
 ```
-This opens the application in a standalone native desktop window powered by Microsoft Edge Chromium WebView2.
 
-### Step 5: Build a Standalone Executable (.EXE)
-To generate a single portable `.exe` file that runs on any Windows machine without needing Python installed:
-Double-click `build_exe.bat` or run:
-```powershell
-pyinstaller --name "DeadStatePruner" --noconsole --onefile --add-data "templates;templates" --add-data "static;static" desktop.py
-```
-The compiled single-file executable will be available at `dist/DeadStatePruner.exe`.
+### Method 6: Progressive Web App (PWA)
+When running on `http://127.0.0.1:5000` (or hosted online), Chrome/Edge displays an **"Install App"** icon in the address bar. Clicking it installs Dead-State Pruner as a standalone desktop/mobile app with offline caching powered by `sw.js`.
 
 ---
 

@@ -14,7 +14,7 @@ Features:
 
 import os
 import json
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory, make_response
 
 app = Flask(__name__)
 
@@ -499,8 +499,27 @@ def generate_batch_tests(alphabet, max_length=3):
 # --- ROUTES ---
 
 @app.route("/")
+@app.route("/index.html")
 def index():
     return render_template("index.html")
+
+
+@app.route("/favicon.ico")
+def favicon():
+    return send_from_directory(os.path.dirname(os.path.abspath(__file__)), "icon.ico", mimetype="image/vnd.microsoft.icon")
+
+
+@app.route("/sw.js")
+def service_worker():
+    response = make_response(send_from_directory(os.path.dirname(os.path.abspath(__file__)), "sw.js"))
+    response.headers["Content-Type"] = "application/javascript"
+    response.headers["Service-Worker-Allowed"] = "/"
+    return response
+
+
+@app.route("/manifest.json")
+def manifest():
+    return send_from_directory(os.path.dirname(os.path.abspath(__file__)), "manifest.json", mimetype="application/manifest+json")
 
 
 @app.route("/api/presets", methods=["GET"])

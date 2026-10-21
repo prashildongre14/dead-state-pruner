@@ -8,6 +8,8 @@
 
 (function () {
   'use strict';
+  if (window.__DSP_APP_LOADED__) return;
+  window.__DSP_APP_LOADED__ = true;
 
   // --- Presets Data ---
   const PRESETS = {
@@ -185,17 +187,22 @@
   const exportGraphsPngBtn = document.getElementById("export-graphs-png-btn");
   const copyPseudocodeBtn = document.getElementById("copy-pseudocode-btn");
 
-  // Graph Canvas Controls
-  document.getElementById("graph-zoom-in").addEventListener("click", () => { cyMain && cyMain.zoom(cyMain.zoom() * 1.25); });
-  document.getElementById("graph-zoom-out").addEventListener("click", () => { cyMain && cyMain.zoom(cyMain.zoom() * 0.8); });
-  document.getElementById("graph-fit").addEventListener("click", () => { cyMain && cyMain.fit(null, 30); });
-  document.getElementById("graph-relayout").addEventListener("click", () => { cyMain && runGraphLayout(cyMain); });
-  document.getElementById("export-png-btn").addEventListener("click", () => exportGraphImage(cyMain, "dfa_original_graph.png"));
-
   // ==========================================================================
   // Initialization & Event Binding
   // ==========================================================================
   function init() {
+    // Graph Canvas Controls
+    const zoomIn = document.getElementById("graph-zoom-in");
+    if (zoomIn) zoomIn.addEventListener("click", () => { cyMain && cyMain.zoom(cyMain.zoom() * 1.25); });
+    const zoomOut = document.getElementById("graph-zoom-out");
+    if (zoomOut) zoomOut.addEventListener("click", () => { cyMain && cyMain.zoom(cyMain.zoom() * 0.8); });
+    const graphFit = document.getElementById("graph-fit");
+    if (graphFit) graphFit.addEventListener("click", () => { cyMain && cyMain.fit(null, 30); });
+    const graphRelayout = document.getElementById("graph-relayout");
+    if (graphRelayout) graphRelayout.addEventListener("click", () => { cyMain && runGraphLayout(cyMain); });
+    const exportPng = document.getElementById("export-png-btn");
+    if (exportPng) exportPng.addEventListener("click", () => exportGraphImage(cyMain, "dfa_original_graph.png"));
+
     // Set report date
     const dateVal = document.getElementById("report-date-val");
     if (dateVal) dateVal.textContent = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
@@ -244,6 +251,33 @@
 
     // Run initial analysis automatically so user sees complete populated dashboard immediately!
     runAnalysis();
+
+    // Auto-resize and fit graphs on window resize
+    window.addEventListener("resize", () => {
+      if (cyMain) { cyMain.resize(); cyMain.fit(null, 35); }
+      if (cyCompareOrig) { cyCompareOrig.resize(); cyCompareOrig.fit(null, 25); }
+      if (cyOptimized) { cyOptimized.resize(); cyOptimized.fit(null, 25); }
+    });
+
+    // Auto-fit graphs when scrolled into view
+    if ('IntersectionObserver' in window) {
+      const graphObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            setTimeout(() => {
+              if (cyMain) { cyMain.resize(); cyMain.fit(null, 35); }
+              if (cyCompareOrig) { cyCompareOrig.resize(); cyCompareOrig.fit(null, 25); }
+              if (cyOptimized) { cyOptimized.resize(); cyOptimized.fit(null, 25); }
+            }, 100);
+          }
+        });
+      }, { threshold: 0.15 });
+
+      const gOrig = document.getElementById("cy-original");
+      if (gOrig) graphObserver.observe(gOrig);
+      const gComp = document.getElementById("cy-compare-orig");
+      if (gComp) graphObserver.observe(gComp);
+    }
   }
 
   function scrollToSection(id) {
@@ -924,6 +958,7 @@
 
     if (cyMain) {
       cyMain.destroy();
+      cyMain = null;
     }
 
     const elements = buildCytoscapeElements(dfa, analysis, false);
@@ -941,26 +976,39 @@
     });
 
     runGraphLayout(cyMain);
+    setTimeout(() => {
+      if (cyMain) {
+        cyMain.resize();
+        cyMain.fit(null, 35);
+      }
+    }, 200);
   }
 
   function runGraphLayout(cyInstance) {
     if (!cyInstance) return;
-
-    // Use cose layout for dynamic graph placement
-    const layout = cyInstance.layout({
-      name: 'cose',
-      animate: true,
-      animationDuration: 400,
-      fit: true,
-      padding: 35,
-      nodeRepulsion: function () { return 450000; },
-      nodeOverlap: 20,
-      idealEdgeLength: function () { return 110; },
-      edgeElasticity: function () { return 100; },
-      gravity: 80,
-      numIter: 800
-    });
-    layout.run();
+    try {
+      cyInstance.resize();
+      const layout = cyInstance.layout({
+        name: 'cose',
+        animate: false,
+        fit: true,
+        padding: 40,
+        nodeRepulsion: function () { return 450000; },
+        nodeOverlap: 20,
+        idealEdgeLength: function () { return 110; },
+        edgeElasticity: function () { return 100; },
+        gravity: 80,
+        numIter: 400
+      });
+      layout.on('layoutstop', function () {
+        cyInstance.fit(null, 35);
+      });
+      layout.run();
+    } catch (e) {
+      try {
+        cyInstance.layout({ name: 'circle', padding: 35, fit: true }).run();
+      } catch (err) {}
+    }
   }
 
   function renderComparisonSection(origDFA, optDFA, reduction, analysis) {
@@ -975,7 +1023,7 @@
     if (window.cytoscape) {
       // 1. Original Mini Graph
       const compOrigContainer = document.getElementById("cy-compare-orig");
-      if (cyCompareOrig) cyCompareOrig.destroy();
+      if (cyCompareOrig) { cyCompareOrig.destroy(); cyCompareOrig = null; }
       cyCompareOrig = cytoscape({
         container: compOrigContainer,
         elements: buildCytoscapeElements(origDFA, analysis, false),
@@ -987,7 +1035,7 @@
 
       // 2. Optimized Mini Graph
       const optContainer = document.getElementById("cy-optimized");
-      if (cyOptimized) cyOptimized.destroy();
+      if (cyOptimized) { cyOptimized.destroy(); cyOptimized = null; }
       cyOptimized = cytoscape({
         container: optContainer,
         elements: buildCytoscapeElements(optDFA, null, true),
@@ -996,6 +1044,11 @@
         wheelSensitivity: 0.2
       });
       runGraphLayout(cyOptimized);
+
+      setTimeout(() => {
+        if (cyCompareOrig) { cyCompareOrig.resize(); cyCompareOrig.fit(null, 25); }
+        if (cyOptimized) { cyOptimized.resize(); cyOptimized.fit(null, 25); }
+      }, 250);
     }
 
     // Render Transition Matrices
